@@ -1,34 +1,41 @@
+import openpyxl
 
+inventory_file = openpyxl.load_workbook('inventory.xlsx')
+product_list = inventory_file['Sheet1']
+print(product_list)
 
-def days_to_units(days): 
-    return int(days) * 24
+products_per_supplier = {}
+inventory_per_supplier = {}
+inventory_less_than_ten = {}
 
-def validate_and_execute():
-    try:
-        user_input_number = set(input("Please enter a number of days and I will convert it to hours!\n").split(","))
-        print(user_input_number)
-        if len(user_input_number) > 0:
-            for unit in user_input_number:
-                if int(unit) == 0:
-                    print("You entered a 0, please enter a valid positive number")
-                elif int(unit) < 0:
-                    print("You entered a negative number.")    
-                else: 
-                    calculated_value = days_to_units(unit)
-                    print(f"{unit} days equal to {calculated_value} hours")
-                
-    except:
-        print("Your input is not a valid number.")
-        
-switch = True
-
-
-while switch:
-    validate_and_execute()
-    exit=str.lower(input("Do you want to exit?"))
-    if exit == "yes":
-        switch = False
-    elif exit == "no":
-        switch =True
+for product_row in range(2,product_list.max_row+1):
+    supplier_name = product_list.cell(product_row, 4).value # The value in fourth column
+    inventory = product_list.cell(product_row, 2).value
+    price = product_list.cell(product_row, 3).value
+    inventory_number = product_list.cell(product_row, 1).value
+    inventory_price = product_list.cell(product_row, 5) # Don't add value as we need an empty cell
+    
+    print(supplier_name)
+    
+    if supplier_name in products_per_supplier:
+        products_per_supplier[supplier_name] += 1
     else:
-        switch = True
+        products_per_supplier[supplier_name] = 1 
+    
+    if supplier_name in inventory_per_supplier:
+        inventory_per_supplier[supplier_name] += (inventory * price)
+    else:
+        inventory_per_supplier[supplier_name] = (inventory * price)
+        
+    if inventory < 10:
+        inventory_less_than_ten[inventory_number] = int(inventory)
+        
+    inventory_price.value = inventory * price
+         
+    
+
+print(products_per_supplier) 
+print(inventory_per_supplier) 
+print(inventory_less_than_ten)
+
+inventory_file.save('inventory_with_total_value.csv')
